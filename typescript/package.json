@@ -1,0 +1,14 @@
+{
+    "name": "notion-torii",
+    "version": "0.1.0",
+    "bin": {
+        "main": "src/main.js"
+    },
+    "scripts": {
+        "watch": "tsc -w"
+    },
+    "devDependencies": {
+        "@types/node": "^20.16.11",
+        "source-map-support": "^0.5.21"
+    }
+}

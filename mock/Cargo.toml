@@ -1,0 +1,33 @@
+[package]
+name = "mock"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1.0.89", features = ["backtrace"] }
+aws-config = "1.5.8"
+aws-sdk-dynamodb = { version = "1.50.0", features = ["behavior-version-latest"] }
+axum = { version = "0.7.7", features = ["macros"] }
+lambda_http = "0.13.0"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
+strum = { version = "0.26.3", features = ["derive", "strum_macros"] }
+tokio = { version = "1.40.0", features = [
+    "tracing",
+    "macros",
+    "rt-multi-thread",
+] }
+tracing = { version = "0.1.40", features = ["log"] }
+tracing-log = "0.2.0"
+tracing-subscriber = { version = "0.3", features = [
+    "env-filter",
+    "serde",
+    "serde_json",
+    "tracing",
+    "json",
+    "registry",
+    "time",
+] }
+utoipa = { version = "5.0.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "8.0.0", features = ["axum"] }
+uuid = { version = "1.10.0", features = ["v4", "serde"] }
