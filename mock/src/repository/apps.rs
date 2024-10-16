@@ -1,53 +1,57 @@
+use super::App;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-#[derive(Debug, Serialize, Deserialize, strum::Display)]
-pub enum AppState {
-    Discovered,
-    Sanctioned,
-    Closed,
-}
-
-#[derive(Debug, Serialize, Deserialize, strum::Display)]
-pub enum AppCategory {
-    Operations,
-    #[strum(to_string = "Sales & Marketing")]
-    SalesAndMarketing,
-    #[strum(to_string = "Developer Tools")]
-    DeveloperTools,
-    Design,
-    #[strum(to_string = "Project Management")]
-    ProjectManagement,
-    #[strum(to_string = "Customer Success")]
-    CustomerSuccess,
-    #[strum(to_string = "Human Resources")]
-    HumanResources,
-    #[strum(to_string = "IT & Security")]
-    ItAndSecurity,
-    Finance,
-    Productivity,
-    #[strum(to_string = "Analytics & BI")]
-    AnalyticsAndBi,
-    Other,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct App {
-    id: Uuid,
-    #[serde(rename = "isHidden")]
-    is_hidden: bool,
-    name: String,
-    state: AppState,
-    url: String,
-    category: AppCategory,
-    description: String,
-    tags: String,
-}
 
 pub trait AppsRepository {
-    async fn get_app();
-    async fn create_app();
-    async fn delete_app();
-    async fn list_apps();
-    async fn update_app();
+    async fn get_app() -> anyhow::Result<App>;
+    async fn create_app() -> anyhow::Result<App>;
+    async fn delete_app() -> anyhow::Result<()>;
+    async fn list_apps() -> anyhow::Result<Vec<App>>;
+    async fn update_app() -> anyhow::Result<App>;
+}
+
+#[derive(Debug, Clone)]
+pub struct DynamoAppsRepository {
+    pub dynamo_client: aws_sdk_dynamodb::Client,
+    pub table_name: String,
+}
+
+impl DynamoAppsRepository {
+    pub fn new(dynamo_client: aws_sdk_dynamodb::Client, table_name: String) -> Self {
+        Self {
+            dynamo_client,
+            table_name,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AppDynamoItem {
+    pk: String,
+    sk: String,
+    entity_type: String,
+
+    #[serde(flatten)]
+    app: App,
+}
+
+impl AppsRepository for DynamoAppsRepository {
+    async fn get_app() -> anyhow::Result<App> {
+        todo!()
+    }
+
+    async fn create_app() -> anyhow::Result<App> {
+        todo!()
+    }
+
+    async fn delete_app() -> anyhow::Result<()> {
+        todo!()
+    }
+
+    async fn list_apps() -> anyhow::Result<Vec<App>> {
+        todo!()
+    }
+
+    async fn update_app() -> anyhow::Result<App> {
+        todo!()
+    }
 }

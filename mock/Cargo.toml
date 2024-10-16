@@ -8,6 +8,7 @@ anyhow = { version = "1.0.89", features = ["backtrace"] }
 aws-config = "1.5.8"
 aws-sdk-dynamodb = { version = "1.50.0", features = ["behavior-version-latest"] }
 axum = { version = "0.7.7", features = ["macros"] }
+chrono = { version = "0.4.38", features = ["serde"] }
 lambda_http = "0.13.0"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
