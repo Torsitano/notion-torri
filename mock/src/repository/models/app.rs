@@ -1,6 +1,6 @@
 use chrono::{prelude::*, Utc};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, strum::Display, Clone)]
 pub enum AppState {
@@ -32,21 +32,60 @@ pub enum AppCategory {
     Other,
 }
 
+// List of all values available here:
+// https://developers.toriihq.com/reference/getappsidapp
+// https://developers.toriihq.com/reference/getapps
+
+// None of the other API docs indicate the correct list of items
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct App {
-    id: Uuid,
+    pub id: u16,
     #[serde(rename = "isHidden")]
-    is_hidden: bool,
-    name: String,
-    state: AppState,
-    url: String,
-    category: AppCategory,
-    description: Option<String>,
-    tags: Option<String>,
+    pub is_hidden: bool,
+    pub name: String,
+    pub state: AppState,
+    pub url: String,
+    #[serde(rename = "imageUrl")]
+    pub image_url: Option<String>,
+    pub category: AppCategory,
+    pub users: Option<String>,
+    pub description: Option<String>,
+    pub tags: Option<String>,
     #[serde(rename = "creationTime")]
-    creation_time: DateTime<Utc>,
+    pub creation_time: DateTime<Utc>,
+    #[serde(rename = "lastUsageTime")]
+    pub last_usage_time: Option<DateTime<Utc>>,
+    #[serde(rename = "addedBy")]
+    pub added_by: String,
     #[serde(rename = "primaryOwner")]
-    primary_owner: String,
+    pub primary_owner: String,
     #[serde(rename = "isCustom")]
-    is_custom: bool,
+    pub is_custom: bool,
+    pub sources: Option<String>,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        // Will blow up if there's a conflict, just here for default because this isn't a real service
+        let random_id = rand::thread_rng().gen();
+
+        Self {
+            id: random_id,
+            is_hidden: false,
+            name: format!("{random_id}-app"),
+            added_by: "Default".to_string(),
+            category: AppCategory::Other,
+            creation_time: Utc::now(),
+            description: None,
+            image_url: None,
+            is_custom: false,
+            last_usage_time: None,
+            primary_owner: "N/A".to_string(),
+            sources: None,
+            state: AppState::Discovered,
+            tags: None,
+            url: format!("default-{random_id}.com"),
+            users: None,
+        }
+    }
 }

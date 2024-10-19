@@ -1,20 +1,14 @@
+use std::sync::Arc;
+
 use aws_config::{self, BehaviorVersion};
 use aws_sdk_dynamodb;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use crate::{
-    app_service::AppsService,
-    repository::{AppsRepository, DynamoAppsRepository},
+    apps_service::{AppsService, AppsServiceTrait},
+    repository::DynamoAppsRepository,
 };
-
-#[derive(Debug, Clone)]
-pub struct Backend<R>
-where
-    R: AppsRepository,
-{
-    apps_service: AppsService<R>,
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TableSettings {
@@ -28,33 +22,33 @@ pub struct Settings {
     pub table: TableSettings,
 }
 
-impl<R> Backend<R>
+#[derive(Debug, Clone)]
+pub struct Backend<AS>
 where
-    R: AppsRepository + std::fmt::Debug,
+    AS: AppsServiceTrait,
 {
-    #[instrument]
-    pub async fn new(apps_repo: R, settings: &Settings) -> anyhow::Result<Self> {
-        Ok(Self {
-            apps_service: AppsService { repo: apps_repo },
-        })
-    }
+    pub apps_service: Arc<AS>,
 }
 
 #[instrument]
-pub async fn setup() -> Backend<DynamoAppsRepository> {
+pub async fn setup() -> Backend<impl AppsServiceTrait> {
     let settings = Settings {
-        environment: "dev".to_string(),
+        environment: "local".to_string(),
         table: TableSettings {
-            endpoint_url: None,
-            table_name: "test".to_string(),
+            endpoint_url: Some("http://127.0.0.1:8001".to_string()),
+            table_name: "torii-table".to_string(),
         },
     };
 
     let dynamo_client = get_dynamo_client(&settings).await;
-
     let apps_repo = DynamoAppsRepository::new(dynamo_client, settings.table.table_name.clone());
+    let apps_service = AppsService::new(apps_repo);
 
-    Backend::new(apps_repo, &settings).await.unwrap()
+    let app_state = Backend {
+        apps_service: Arc::new(apps_service),
+    };
+
+    app_state
 }
 
 #[instrument]
