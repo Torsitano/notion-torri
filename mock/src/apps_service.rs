@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
 use crate::{
-    api_error::ApiError,
     repository::{
         AddAppError, App, AppCategory, AppState, AppsRepository, CreateAppError, DeleteAppError,
         GetAppError, ListAppsError, UpdateAppError,
     },
-    routes::{AddAppHttpRequestBody, CreateAppHttpRequestBody, UpdateAppHttpRequestBody},
+    routes::{
+        AddAppHttpRequestBody, CreateAppHttpRequestBody, SearchAppsQueryParams,
+        UpdateAppHttpRequestBody,
+    },
 };
 use async_trait::async_trait;
 
@@ -18,6 +20,7 @@ pub trait AppsServiceTrait: std::fmt::Debug + Send + Sync + Clone {
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError>;
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError>;
     async fn update_app(&self, request: UpdateAppHttpRequestBody) -> Result<App, UpdateAppError>;
+    async fn search_apps(&self, params: SearchAppsQueryParams) -> Result<Vec<App>, ListAppsError>;
 }
 
 #[derive(Debug, Clone)]
@@ -52,7 +55,7 @@ where
         if let Some(app) = get_default_app(body.id_app) {
             self.repo.add_app(app).await
         } else {
-            Err(AddAppError::ResourceNotFound { id: body.id_app })
+            Err(AddAppError::ResourceNotFound(body.id_app))
         }
     }
 
@@ -90,6 +93,18 @@ where
     #[tracing::instrument]
     async fn update_app(&self, request: UpdateAppHttpRequestBody) -> Result<App, UpdateAppError> {
         self.repo.update_app(todo!()).await
+    }
+
+    #[tracing::instrument]
+    async fn search_apps(&self, params: SearchAppsQueryParams) -> Result<Vec<App>, ListAppsError> {
+        let apps = self.repo.list_apps().await?;
+
+        let found_apps = apps
+            .into_iter()
+            .filter(|app| app.name.contains(&params.query))
+            .collect();
+
+        Ok(found_apps)
     }
 }
 

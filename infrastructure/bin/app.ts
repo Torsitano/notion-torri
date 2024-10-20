@@ -15,4 +15,3 @@ new NotionToriiStack( app, 'NotionToriiStack', {
     }
 } )
 
-

@@ -1,4 +1,8 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    Json,
+};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -11,6 +15,7 @@ use crate::{
 
 #[tracing::instrument]
 pub async fn update_app<AS: AppsServiceTrait>(
+    Path(UpdateAppPathContent { id }): Path<UpdateAppPathContent>,
     State(state): State<Backend<AS>>,
     body: Json<UpdateAppHttpRequestBody>,
 ) -> Result<(StatusCode, Json<App>), ApiError> {
@@ -18,6 +23,11 @@ pub async fn update_app<AS: AppsServiceTrait>(
     let app = state.apps_service.update_app(body.0).await?;
 
     Ok((StatusCode::OK, Json(app)))
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
+pub struct UpdateAppPathContent {
+    pub id: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
@@ -36,7 +46,7 @@ impl From<UpdateAppError> for ApiError {
         match value {
             UpdateAppError::ValidationError(msg) => Self::ValidationError(msg.to_string()),
             UpdateAppError::UnexpectedError => Self::InternalServerError,
-            UpdateAppError::ResourceNotFound(msg) => Self::ResourceNotFound(msg),
+            UpdateAppError::ResourceNotFound(msg) => Self::ResourceNotFound(msg.to_string()),
         }
     }
 }

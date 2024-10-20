@@ -21,6 +21,7 @@ struct ApiDoc;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     dotenv().ok();
+
     tracing_subscriber::fmt()
         .json()
         .with_target(false)
@@ -35,17 +36,18 @@ async fn main() -> Result<(), Error> {
     );
 
     let app_state = setup().await;
-
     let router = Router::new();
 
     let app = router
         .route("/v1.0/apps", get(routes::list_apps).post(routes::add_app))
-        // .route(
-        //     "/v1.0/apps/:id",
-        //     get(routes::get_app).put(routes::update_app),
-        // )
+        .route(
+            "/v1.0/apps/:id",
+            get(routes::get_app)
+                .put(routes::update_app)
+                .delete(routes::delete_app),
+        )
         .route("/v1.0/apps/custom", post(routes::create_app))
-        // .route("/v1.0/apps/search", get(routes::search_apps))
+        .route("/v1.0/apps/search", get(routes::search_apps))
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .layer(trace_layer)
         .with_state(app_state);

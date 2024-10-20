@@ -42,6 +42,9 @@ pub async fn setup() -> Backend<impl AppsServiceTrait> {
 
     let dynamo_client = get_dynamo_client(&settings).await;
     let apps_repo = DynamoAppsRepository::new(dynamo_client, settings.table.table_name.clone());
+
+    apps_repo.create_atomic_counter().await;
+
     let apps_service = AppsService::new(apps_repo);
 
     let app_state = Backend {

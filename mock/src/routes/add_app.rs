@@ -15,7 +15,7 @@ pub async fn add_app<AS: AppsServiceTrait>(
 ) -> Result<(StatusCode, Json<App>), ApiError> {
     let app = state.apps_service.add_app(body.0).await?;
 
-    Ok((StatusCode::OK, Json(app)))
+    Ok((StatusCode::CREATED, Json(app)))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,7 +28,8 @@ impl From<AddAppError> for ApiError {
     fn from(value: AddAppError) -> Self {
         match value {
             AddAppError::ValidationError(msg) => Self::ValidationError(msg.to_string()),
-            AddAppError::ResourceNotFound { id } => Self::ResourceNotFound(id.to_string()),
+            AddAppError::ResourceNotFound(id) => Self::ResourceNotFound(id.to_string()),
+            AddAppError::ResourceAlreadyExists { name } => Self::ResourceAlreadyExists(name),
             AddAppError::UnexpectedError => Self::InternalServerError,
         }
     }

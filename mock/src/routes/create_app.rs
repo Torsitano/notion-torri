@@ -17,7 +17,7 @@ pub async fn create_app<AS: AppsServiceTrait>(
     body.validate()?;
     let app = state.apps_service.create_app(body.0).await?;
 
-    Ok((StatusCode::OK, Json(app)))
+    Ok((StatusCode::CREATED, Json(app)))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]

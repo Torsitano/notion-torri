@@ -2,10 +2,14 @@ use super::{
     AddAppError, App, CreateAppError, DeleteAppError, GetAppError, ListAppsError, UpdateAppError,
 };
 use async_trait::async_trait;
+use aws_sdk_dynamodb::error::DisplayErrorContext;
+use aws_sdk_dynamodb::operation::delete_item::DeleteItemError;
+use aws_sdk_dynamodb::operation::get_item::GetItemError;
+use aws_sdk_dynamodb::operation::put_item::PutItemError;
 use aws_sdk_dynamodb::types::{AttributeValue, ReturnValue};
 use serde::{Deserialize, Serialize};
 use serde_dynamo::aws_sdk_dynamodb_1::{from_item, from_items, to_item};
-use tracing::instrument;
+use tracing::{debug, info, instrument};
 
 #[async_trait]
 pub trait AppsRepository: std::fmt::Debug + Send + Sync + Clone {
@@ -30,6 +34,40 @@ impl DynamoAppsRepository {
         Self {
             dynamo_client,
             table_name,
+        }
+    }
+
+    #[instrument(skip(self))]
+    pub async fn create_atomic_counter(&self) {
+        let result = self
+            .dynamo_client
+            .get_item()
+            .table_name(&self.table_name)
+            .key("pk", AttributeValue::S("atomic_counter".to_string()))
+            .send()
+            .await
+            .unwrap();
+
+        debug!("{:#?}", result);
+
+        if result.item.is_none() {
+            info!("Atomic counter was not found, creating...");
+
+            let start_count = 1100;
+
+            let new_counter = to_item(DynamoCounter {
+                pk: "atomic_counter".to_string(),
+                count: start_count,
+            })
+            .expect("Creation of atomic counter should not fail");
+
+            self.dynamo_client
+                .put_item()
+                .table_name(&self.table_name)
+                .set_item(Some(new_counter))
+                .send()
+                .await
+                .expect("Unable to create atomic counter");
         }
     }
 }
@@ -72,8 +110,15 @@ impl AppsRepository for DynamoAppsRepository {
             .send()
             .await
             .map_err(|e| {
-                eprintln!("{:#?}", e);
-                GetAppError::UnexpectedError
+                let err = e.into_service_error();
+
+                match err {
+                    GetItemError::ResourceNotFoundException(_) => GetAppError::ResourceNotFound(id),
+                    _ => {
+                        tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(&err));
+                        GetAppError::UnexpectedError
+                    }
+                }
             })?;
 
         if let Some(item) = result.item {
@@ -81,23 +126,98 @@ impl AppsRepository for DynamoAppsRepository {
 
             Ok(app)
         } else {
-            Err(GetAppError::ResourceNotFound(id.to_string()))
+            Err(GetAppError::ResourceNotFound(id))
         }
     }
 
     #[instrument]
+    /// add_app is intended for adding "pre-existing" applications defined by the service
     async fn add_app(&self, app: App) -> Result<App, AddAppError> {
-        todo!()
+        let item = to_item(&app)?;
+
+        let _result = self
+            .dynamo_client
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(item))
+            .condition_expression("attribute_not_exists(pk)")
+            .send()
+            .await
+            .map_err(|e| {
+                let err = e.into_service_error();
+
+                match err {
+                    PutItemError::ConditionalCheckFailedException(_) => {
+                        AddAppError::ResourceAlreadyExists {
+                            name: app.name.clone(),
+                        }
+                    }
+                    _ => {
+                        tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(&err));
+                        AddAppError::UnexpectedError
+                    }
+                }
+            })?;
+
+        Ok(app)
     }
 
     #[instrument]
     async fn create_app(&self, app: App) -> Result<App, CreateAppError> {
-        todo!()
+        let item = to_item(&app)?;
+
+        let _result = self
+            .dynamo_client
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(item))
+            .condition_expression("attribute_not_exists(pk)")
+            .send()
+            .await
+            .map_err(|e| {
+                let err = e.into_service_error();
+
+                match err {
+                    PutItemError::ConditionalCheckFailedException(_) => {
+                        CreateAppError::ResourceAlreadyExists {
+                            name: app.name.clone(),
+                        }
+                    }
+                    _ => {
+                        tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(&err));
+                        CreateAppError::UnexpectedError
+                    }
+                }
+            })?;
+
+        Ok(app)
     }
 
     #[instrument]
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError> {
-        todo!()
+        let _result = self
+            .dynamo_client
+            .delete_item()
+            .table_name(&self.table_name)
+            .key("pk", AttributeValue::S(id.to_string()))
+            .condition_expression("attribute_exists(pk)")
+            .send()
+            .await
+            .map_err(|e| {
+                let err = e.into_service_error();
+
+                match err {
+                    DeleteItemError::ResourceNotFoundException(_) => {
+                        DeleteAppError::ResourceNotFound(id)
+                    }
+                    _ => {
+                        tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(&err));
+                        DeleteAppError::UnexpectedError
+                    }
+                }
+            })?;
+
+        Ok(())
     }
 
     #[instrument]
@@ -111,7 +231,7 @@ impl AppsRepository for DynamoAppsRepository {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("DynamoDB SDK Error: {:?}", e);
+                tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(e));
                 ListAppsError::UnexpectedError
             })?;
 
@@ -125,10 +245,14 @@ impl AppsRepository for DynamoAppsRepository {
     }
 
     #[instrument]
-    async fn update_app(&self, app: App) -> Result<App, UpdateAppError> {
+    async fn update_app(&self, _app: App) -> Result<App, UpdateAppError> {
         todo!()
     }
 
+    /// Atomic counter will be set to a number that should be above the staticly configured
+    /// apps in the apps_service.rs. This is a manually specified number, and is not intended
+    /// to be able to handle any situations beyond that. If you are shenaniganizing, this can
+    /// blow up, and you deserve it
     #[instrument]
     async fn get_id(&self) -> Result<u16, ()> {
         let result = self
@@ -140,13 +264,10 @@ impl AppsRepository for DynamoAppsRepository {
             .return_values(ReturnValue::AllNew)
             .send()
             .await
-            .map_err(|e| {
-                tracing::error!("DynamoDB SDK Error: {:?}", e);
-            })?;
+            .expect("Should not error because atomic counter is checked on startup");
 
         if let Some(item) = result.attributes {
             let counter: DynamoCounter = from_item(item).unwrap();
-
             Ok(counter.count)
         } else {
             Err(())
