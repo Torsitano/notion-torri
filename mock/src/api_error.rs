@@ -20,9 +20,9 @@ pub enum ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         let (status, error_message) = match &self {
-            ApiError::ResourceNotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            ApiError::ResourceAlreadyExists(msg) => (StatusCode::BAD_REQUEST, msg),
-            ApiError::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg),
+            ApiError::ResourceNotFound(_) => (StatusCode::NOT_FOUND, &self.to_string()),
+            ApiError::ResourceAlreadyExists(_) => (StatusCode::BAD_REQUEST, &self.to_string()),
+            ApiError::ValidationError(_) => (StatusCode::BAD_REQUEST, &self.to_string()),
             ApiError::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 &"An unexpected error has occurred".to_string(),

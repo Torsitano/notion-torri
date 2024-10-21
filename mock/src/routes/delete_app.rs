@@ -12,7 +12,7 @@ use crate::{
 
 #[utoipa::path(
     delete,
-    path = "/v1.0/apps/{idApp}",
+    path = "/v1.0/apps/{id}",
     params(DeleteAppPathContent),
     responses(
         (status = OK, description = "Successfully deleted app", body = String),
@@ -25,7 +25,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn delete_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
     Path(DeleteAppPathContent { id }): Path<DeleteAppPathContent>,

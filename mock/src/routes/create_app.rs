@@ -25,7 +25,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn create_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
     body: Json<CreateAppHttpRequestBody>,

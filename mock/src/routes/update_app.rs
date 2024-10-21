@@ -15,7 +15,7 @@ use crate::{
 
 #[utoipa::path(
     put,
-    path = "/v1.0/apps",
+    path = "/v1.0/apps{id}",
     params(UpdateAppPathContent),
     request_body = UpdateAppHttpRequestBody,
     responses(
@@ -30,7 +30,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn update_app<AS: AppsServiceTrait>(
     Path(UpdateAppPathContent { id }): Path<UpdateAppPathContent>,
     State(state): State<Backend<AS>>,

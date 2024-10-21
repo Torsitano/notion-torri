@@ -50,12 +50,12 @@ impl<R> AppsServiceTrait for AppsService<R>
 where
     R: AppsRepository,
 {
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn get_app(&self, id: u16) -> Result<App, GetAppError> {
         self.repo.get_app(id).await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn add_app(&self, body: AddAppHttpRequestBody) -> Result<App, AddAppError> {
         if let Some(app) = get_default_app(body.id_app) {
             self.repo.add_app(app).await
@@ -64,7 +64,7 @@ where
         }
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn create_app(&self, request: CreateAppHttpRequestBody) -> Result<App, CreateAppError> {
         let id = self
             .repo
@@ -85,17 +85,17 @@ where
         self.repo.create_app(app).await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError> {
         self.repo.delete_app(id).await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError> {
         self.repo.list_apps().await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn update_app(
         &self,
         request: UpdateAppHttpRequestBody,
@@ -131,7 +131,7 @@ where
         self.repo.update_app(app).await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip(self))]
     async fn search_apps(&self, params: SearchAppsQueryParams) -> Result<Vec<App>, ListAppsError> {
         let apps = self.repo.list_apps().await?;
 

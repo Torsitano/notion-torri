@@ -20,7 +20,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn list_apps<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
 ) -> Result<(StatusCode, Json<Vec<App>>), ApiError> {

@@ -74,7 +74,7 @@ impl DynamoAppsRepository {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AppDynamoItem {
-    pk: u16,
+    pk: String,
     entity_type: String,
 
     #[serde(flatten)]
@@ -83,11 +83,11 @@ pub struct AppDynamoItem {
 
 impl AppDynamoItem {
     #[instrument]
-    pub fn new(app: App) -> Self {
+    pub fn new(app: &App) -> Self {
         Self {
-            pk: app.id,
+            pk: app.id.to_string(),
             entity_type: "app".to_string(),
-            app,
+            app: app.clone(),
         }
     }
 }
@@ -100,7 +100,7 @@ pub struct DynamoCounter {
 
 #[async_trait]
 impl AppsRepository for DynamoAppsRepository {
-    #[instrument]
+    #[instrument(skip(self))]
     async fn get_app(&self, id: u16) -> Result<App, GetAppError> {
         let result = self
             .dynamo_client
@@ -130,10 +130,12 @@ impl AppsRepository for DynamoAppsRepository {
         }
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     /// add_app is intended for adding "pre-existing" applications defined by the service
     async fn add_app(&self, app: App) -> Result<App, AddAppError> {
-        let item = to_item(&app)?;
+        let item = to_item(AppDynamoItem::new(&app))?;
+
+        info!("{:?}", item);
 
         let _result = self
             .dynamo_client
@@ -162,9 +164,11 @@ impl AppsRepository for DynamoAppsRepository {
         Ok(app)
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     async fn create_app(&self, app: App) -> Result<App, CreateAppError> {
-        let item = to_item(&app)?;
+        let item = to_item(AppDynamoItem::new(&app))?;
+
+        info!("{:?}", item);
 
         let _result = self
             .dynamo_client
@@ -193,7 +197,7 @@ impl AppsRepository for DynamoAppsRepository {
         Ok(app)
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError> {
         let _result = self
             .dynamo_client
@@ -220,7 +224,7 @@ impl AppsRepository for DynamoAppsRepository {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError> {
         let result = self
             .dynamo_client
@@ -244,9 +248,9 @@ impl AppsRepository for DynamoAppsRepository {
         }
     }
 
-    #[instrument]
+    #[instrument(skip(self))]
     async fn update_app(&self, app: App) -> Result<App, UpdateAppError> {
-        let item = to_item(&app)?;
+        let item = to_item(AppDynamoItem::new(&app))?;
 
         let _result = self
             .dynamo_client
@@ -273,7 +277,7 @@ impl AppsRepository for DynamoAppsRepository {
     /// apps in the apps_service.rs. This is a manually specified number, and is not intended
     /// to be able to handle any situations beyond that. If you are shenaniganizing, this can
     /// blow up, and you deserve it
-    #[instrument]
+    #[instrument(skip(self))]
     async fn get_id(&self) -> Result<u16, ()> {
         let result = self
             .dynamo_client

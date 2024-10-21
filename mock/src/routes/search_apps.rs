@@ -24,7 +24,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn search_apps<AS: AppsServiceTrait>(
     Query(params): Query<SearchAppsQueryParams>,
     State(state): State<Backend<AS>>,

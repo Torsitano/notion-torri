@@ -14,7 +14,7 @@ use crate::{
 
 #[utoipa::path(
     get,
-    path = "/v1.0/apps/{idApp}",
+    path = "/v1.0/apps/{id}",
     params(GetAppPathContent),
     responses(
         (status = OK, description = "Successfully retrieved app", body = App),
@@ -27,7 +27,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn get_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
     Path(GetAppPathContent { id }): Path<GetAppPathContent>,

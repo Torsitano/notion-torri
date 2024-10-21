@@ -13,7 +13,7 @@ use crate::{
     path = "/v1.0/apps",
     request_body = AddAppHttpRequestBody,
     responses(
-        (status = OK, description = "Successfully added app", body = App),
+        (status = CREATED, description = "Successfully added app", body = App),
         (status = BAD_REQUEST, description = "Bad Request", body = String),
         (status = UNAUTHORIZED, description = "Unauthorized", body = String),
         (status = NOT_FOUND, description = "Not found", body = String),
@@ -24,7 +24,7 @@ use crate::{
         ("authorization" = []),
     )
 )]
-#[tracing::instrument]
+#[tracing::instrument(skip(state))]
 pub async fn add_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
     body: Json<AddAppHttpRequestBody>,
