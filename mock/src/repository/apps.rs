@@ -245,8 +245,28 @@ impl AppsRepository for DynamoAppsRepository {
     }
 
     #[instrument]
-    async fn update_app(&self, _app: App) -> Result<App, UpdateAppError> {
-        todo!()
+    async fn update_app(&self, app: App) -> Result<App, UpdateAppError> {
+        let item = to_item(&app)?;
+
+        let _result = self
+            .dynamo_client
+            .put_item()
+            .table_name(&self.table_name)
+            .set_item(Some(item))
+            .send()
+            .await
+            .map_err(|e| {
+                let err = e.into_service_error();
+
+                match err {
+                    _ => {
+                        tracing::error!("DynamoDB SDK Error: {}", DisplayErrorContext(&err));
+                        UpdateAppError::UnexpectedError
+                    }
+                }
+            })?;
+
+        Ok(app)
     }
 
     /// Atomic counter will be set to a number that should be above the staticly configured

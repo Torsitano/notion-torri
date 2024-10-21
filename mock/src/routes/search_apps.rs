@@ -9,6 +9,21 @@ use crate::{
     api_error::ApiError, apps_service::AppsServiceTrait, backend::Backend, repository::App,
 };
 
+#[utoipa::path(
+    get,
+    path = "/v1.0/apps/search",
+    params(SearchAppsQueryParams),
+    responses(
+        (status = OK, description = "List of apps matching query", body = Vec<App>),
+        (status = BAD_REQUEST, description = "Bad Request", body = String),
+        (status = UNAUTHORIZED, description = "UNAUTHORIZED", body = String),
+        (status = NOT_FOUND, description = "Not found", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    security(
+        ("authorization" = []),
+    )
+)]
 #[tracing::instrument]
 pub async fn search_apps<AS: AppsServiceTrait>(
     Query(params): Query<SearchAppsQueryParams>,
@@ -19,16 +34,7 @@ pub async fn search_apps<AS: AppsServiceTrait>(
     Ok((StatusCode::OK, Json(apps)))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::IntoParams)]
 pub struct SearchAppsQueryParams {
     pub query: String,
 }
-
-// impl From<SearchAppsError> for ApiError {
-//     fn from(value: SearchAppsError) -> Self {
-//         match value {
-//             SearchAppsError::ValidationError(msg) => Self::ValidationError(msg.to_string()),
-//             SearchAppsError::UnexpectedError => Self::InternalServerError,
-//         }
-//     }
-// }

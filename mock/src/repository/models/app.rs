@@ -1,15 +1,16 @@
 use chrono::{prelude::*, Utc};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize, strum::Display, Clone)]
+#[derive(Debug, Serialize, Deserialize, strum::Display, Clone, ToSchema)]
 pub enum AppState {
     Discovered,
     Sanctioned,
     Closed,
 }
 
-#[derive(Debug, Serialize, Deserialize, strum::Display, Clone)]
+#[derive(Debug, Serialize, Deserialize, strum::Display, Clone, ToSchema)]
 pub enum AppCategory {
     Operations,
     #[strum(to_string = "Sales & Marketing")]
@@ -37,7 +38,7 @@ pub enum AppCategory {
 // https://developers.toriihq.com/reference/getapps
 
 // None of the other API docs indicate the correct list of items
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
 pub struct App {
     pub id: u16,
     #[serde(rename = "isHidden")]

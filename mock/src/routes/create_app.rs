@@ -9,6 +9,22 @@ use crate::{
     repository::{App, AppCategory, AppState, CreateAppError},
 };
 
+#[utoipa::path(
+    post,
+    path = "/v1.0/apps/custom",
+    request_body = CreateAppHttpRequestBody,
+    responses(
+        (status = OK, description = "Successfully created app", body = App),
+        (status = BAD_REQUEST, description = "Bad Request", body = String),
+        (status = UNAUTHORIZED, description = "UNAUTHORIZED", body = String),
+        (status = NOT_FOUND, description = "Not found", body = String),
+        (status = CONFLICT, description = "App already exists", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    security(
+        ("authorization" = []),
+    )
+)]
 #[tracing::instrument]
 pub async fn create_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
@@ -20,7 +36,7 @@ pub async fn create_app<AS: AppsServiceTrait>(
     Ok((StatusCode::CREATED, Json(app)))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate, utoipa::ToSchema)]
 pub struct CreateAppHttpRequestBody {
     pub name: String,
     pub state: AppState,

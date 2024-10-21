@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
 use aws_config::{self, BehaviorVersion};
 use aws_sdk_dynamodb;
@@ -32,10 +32,21 @@ where
 
 #[instrument]
 pub async fn setup() -> Backend<impl AppsServiceTrait> {
+    let environment = env::var_os("APP_ENVIRONMENT")
+        .unwrap_or_default()
+        .into_string()
+        .unwrap();
+
+    let endpoint_url = if let Some(endpoint_url) = env::var_os("ENDPOINT_URL") {
+        Some(endpoint_url.into_string().unwrap())
+    } else {
+        None
+    };
+
     let settings = Settings {
-        environment: "local".to_string(),
+        environment,
         table: TableSettings {
-            endpoint_url: Some("http://127.0.0.1:8001".to_string()),
+            endpoint_url,
             table_name: "torii-table".to_string(),
         },
     };

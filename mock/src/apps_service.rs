@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use async_trait::async_trait;
+use tracing::error;
 
 #[async_trait]
 pub trait AppsServiceTrait: std::fmt::Debug + Send + Sync + Clone {
@@ -19,7 +20,11 @@ pub trait AppsServiceTrait: std::fmt::Debug + Send + Sync + Clone {
     async fn create_app(&self, request: CreateAppHttpRequestBody) -> Result<App, CreateAppError>;
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError>;
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError>;
-    async fn update_app(&self, request: UpdateAppHttpRequestBody) -> Result<App, UpdateAppError>;
+    async fn update_app(
+        &self,
+        request: UpdateAppHttpRequestBody,
+        id: u16,
+    ) -> Result<App, UpdateAppError>;
     async fn search_apps(&self, params: SearchAppsQueryParams) -> Result<Vec<App>, ListAppsError>;
 }
 
@@ -91,8 +96,39 @@ where
     }
 
     #[tracing::instrument]
-    async fn update_app(&self, request: UpdateAppHttpRequestBody) -> Result<App, UpdateAppError> {
-        self.repo.update_app(todo!()).await
+    async fn update_app(
+        &self,
+        request: UpdateAppHttpRequestBody,
+        id: u16,
+    ) -> Result<App, UpdateAppError> {
+        let mut app = self.get_app(id).await.map_err(|e| match e {
+            GetAppError::ResourceNotFound(id) => UpdateAppError::ResourceNotFound(id),
+            _ => {
+                error!("{}", e);
+                UpdateAppError::UnexpectedError
+            }
+        })?;
+
+        if let Some(name) = request.name {
+            app.name = name
+        };
+
+        if let Some(state) = request.state {
+            app.state = state
+        };
+
+        if let Some(url) = request.url {
+            app.url = url
+        };
+
+        if let Some(category) = request.category {
+            app.category = category
+        };
+
+        app.description = request.description;
+        app.tags = request.tags;
+
+        self.repo.update_app(app).await
     }
 
     #[tracing::instrument]

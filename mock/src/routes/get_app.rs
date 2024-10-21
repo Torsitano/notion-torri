@@ -12,6 +12,21 @@ use crate::{
     repository::{App, GetAppError},
 };
 
+#[utoipa::path(
+    get,
+    path = "/v1.0/apps/{idApp}",
+    params(GetAppPathContent),
+    responses(
+        (status = OK, description = "Successfully retrieved app", body = App),
+        (status = BAD_REQUEST, description = "Bad Request", body = String),
+        (status = UNAUTHORIZED, description = "UNAUTHORIZED", body = String),
+        (status = NOT_FOUND, description = "Not found", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    security(
+        ("authorization" = []),
+    )
+)]
 #[tracing::instrument]
 pub async fn get_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
@@ -22,7 +37,7 @@ pub async fn get_app<AS: AppsServiceTrait>(
     Ok((StatusCode::OK, Json(app)))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, utoipa::IntoParams)]
 pub struct GetAppPathContent {
     pub id: u16,
 }

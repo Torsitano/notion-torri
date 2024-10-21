@@ -10,13 +10,14 @@ import { Tracing } from 'aws-cdk-lib/aws-lambda'
 
 
 export class NotionToriiStack extends Stack {
-    //@ts-ignore
     constructor ( scope: Construct, id: string, props?: StackProps ) {
         super( scope, id, props )
 
         const mockFunction = new RustFunction( this, 'ToriiMock', {
-            manifestPath: path.join( __dirname, '../mock/' ),
-            environment: {},
+            manifestPath: path.join( __dirname, '../../mock/' ),
+            environment: {
+                APP_ENVIRONMENT: 'dev'
+            },
             memorySize: 128,
             tracing: Tracing.ACTIVE,
             bundling: {
@@ -25,7 +26,7 @@ export class NotionToriiStack extends Stack {
         } )
 
         const apiGw = new HttpApi( this, 'ApiGw', {
-            apiName: 'RustApiv2',
+            apiName: 'ToriiMock',
         } )
 
 

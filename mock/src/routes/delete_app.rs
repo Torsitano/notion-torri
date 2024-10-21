@@ -10,6 +10,21 @@ use crate::{
     repository::DeleteAppError,
 };
 
+#[utoipa::path(
+    delete,
+    path = "/v1.0/apps/{idApp}",
+    params(DeleteAppPathContent),
+    responses(
+        (status = OK, description = "Successfully deleted app", body = String),
+        (status = BAD_REQUEST, description = "Bad Request", body = String),
+        (status = UNAUTHORIZED, description = "UNAUTHORIZED", body = String),
+        (status = NOT_FOUND, description = "Not found", body = String),
+        (status = INTERNAL_SERVER_ERROR, description = "Internal server error")
+    ),
+    security(
+        ("authorization" = []),
+    )
+)]
 #[tracing::instrument]
 pub async fn delete_app<AS: AppsServiceTrait>(
     State(state): State<Backend<AS>>,
@@ -20,7 +35,7 @@ pub async fn delete_app<AS: AppsServiceTrait>(
     Ok((StatusCode::OK, Json(format!("App {} deleted", id))))
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy, utoipa::IntoParams)]
 pub struct DeleteAppPathContent {
     pub id: u16,
 }
