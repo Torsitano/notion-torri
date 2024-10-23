@@ -6,6 +6,8 @@ use axum::{
 use backend::setup;
 use dotenv::dotenv;
 use lambda_http::{run, Error};
+use tower_http::trace::{self, TraceLayer};
+use tracing::Level;
 use utoipa::{
     openapi::security::{ApiKey, ApiKeyValue, SecurityScheme},
     Modify, OpenApi,
@@ -76,12 +78,10 @@ async fn main() -> Result<(), Error> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    let trace_layer = tower_http::trace::TraceLayer::new_for_http().make_span_with(
-        |request: &axum::extract::Request<axum::body::Body>| {
-            let uri = request.uri().to_string();
-            tracing::info_span!("http_request", method = ?request.method(), uri)
-        },
-    );
+    let tracing_layer = TraceLayer::new_for_http()
+        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(trace::DefaultOnRequest::new().level(Level::INFO))
+        .on_response(trace::DefaultOnResponse::new().level(Level::INFO));
 
     let app_state = setup().await;
     let router = Router::new()
@@ -102,7 +102,7 @@ async fn main() -> Result<(), Error> {
     let app = router
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .with_state(app_state)
-        .layer(trace_layer);
+        .layer(tracing_layer);
 
     run(app).await
 }

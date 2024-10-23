@@ -14,7 +14,7 @@ use crate::{
     path = "/v1.0/apps/custom",
     request_body = CreateAppHttpRequestBody,
     responses(
-        (status = OK, description = "Successfully created app", body = App),
+        (status = CREATED, description = "Successfully created app", body = App),
         (status = BAD_REQUEST, description = "Bad Request", body = String),
         (status = UNAUTHORIZED, description = "UNAUTHORIZED", body = String),
         (status = NOT_FOUND, description = "Not found", body = String),

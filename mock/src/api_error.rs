@@ -21,7 +21,7 @@ impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         let (status, error_message) = match &self {
             ApiError::ResourceNotFound(_) => (StatusCode::NOT_FOUND, &self.to_string()),
-            ApiError::ResourceAlreadyExists(_) => (StatusCode::BAD_REQUEST, &self.to_string()),
+            ApiError::ResourceAlreadyExists(_) => (StatusCode::CONFLICT, &self.to_string()),
             ApiError::ValidationError(_) => (StatusCode::BAD_REQUEST, &self.to_string()),
             ApiError::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,

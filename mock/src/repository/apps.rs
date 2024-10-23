@@ -14,6 +14,7 @@ use tracing::{debug, info, instrument};
 #[async_trait]
 pub trait AppsRepository: std::fmt::Debug + Send + Sync + Clone {
     async fn get_app(&self, id: u16) -> Result<App, GetAppError>;
+    async fn get_app_by_name(&self, name: &str) -> Result<App, GetAppError>;
     async fn add_app(&self, app: App) -> Result<App, AddAppError>;
     async fn create_app(&self, app: App) -> Result<App, CreateAppError>;
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError>;
@@ -131,6 +132,32 @@ impl AppsRepository for DynamoAppsRepository {
     }
 
     #[instrument(skip(self))]
+    async fn get_app_by_name(&self, name: &str) -> Result<App, GetAppError> {
+        let result = self
+            .dynamo_client
+            .query()
+            .table_name(&self.table_name)
+            .index_name("name_index")
+            .key_condition_expression("#name = :name_val")
+            .expression_attribute_names("#name", "name")
+            .expression_attribute_values(":name_val", AttributeValue::S(name.to_string()))
+            .send()
+            .await
+            .unwrap();
+
+        if let Some(items) = result.items {
+            if let Some(item) = items.first() {
+                let app: App = from_item(item.to_owned())?;
+                Ok(app)
+            } else {
+                Err(GetAppError::ResourceNotFound(0))
+            }
+        } else {
+            Err(GetAppError::ResourceNotFound(0))
+        }
+    }
+
+    #[instrument(skip(self))]
     /// add_app is intended for adding "pre-existing" applications defined by the service
     async fn add_app(&self, app: App) -> Result<App, AddAppError> {
         let item = to_item(AppDynamoItem::new(&app))?;
@@ -167,8 +194,6 @@ impl AppsRepository for DynamoAppsRepository {
     #[instrument(skip(self))]
     async fn create_app(&self, app: App) -> Result<App, CreateAppError> {
         let item = to_item(AppDynamoItem::new(&app))?;
-
-        info!("{:?}", item);
 
         let _result = self
             .dynamo_client
@@ -284,7 +309,9 @@ impl AppsRepository for DynamoAppsRepository {
             .update_item()
             .table_name(&self.table_name)
             .key("pk", AttributeValue::S("atomic_counter".to_string()))
-            .update_expression("set count = :count + 1")
+            .update_expression("SET #cnt = #cnt + :inc")
+            .expression_attribute_names("#cnt", "count")
+            .expression_attribute_values(":inc", AttributeValue::N("1".to_string()))
             .return_values(ReturnValue::AllNew)
             .send()
             .await

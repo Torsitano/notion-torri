@@ -66,6 +66,10 @@ where
 
     #[tracing::instrument(skip(self))]
     async fn create_app(&self, request: CreateAppHttpRequestBody) -> Result<App, CreateAppError> {
+        if let Ok(_) = self.repo.get_app_by_name(&request.name).await {
+            return Err(CreateAppError::ResourceAlreadyExists { name: request.name });
+        }
+
         let id = self
             .repo
             .get_id()
