@@ -3,7 +3,7 @@ import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib'
 import { Construct } from 'constructs'
 import { RustFunction } from 'cargo-lambda-cdk'
 import path from 'path'
-import { AttributeType, Billing, TableEncryptionV2, TableV2 } from 'aws-cdk-lib/aws-dynamodb'
+import { AttributeType, Billing, ProjectionType, TableEncryptionV2, TableV2 } from 'aws-cdk-lib/aws-dynamodb'
 import { HttpApi, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
 import { Tracing } from 'aws-cdk-lib/aws-lambda'
@@ -49,6 +49,15 @@ export class NotionToriiStack extends Stack {
             tableName: 'torii-table',
             removalPolicy: RemovalPolicy.DESTROY,
             billing: Billing.onDemand(),
+        } )
+
+        toriiTable.addGlobalSecondaryIndex( {
+            indexName: 'name_index',
+            partitionKey: {
+                name: 'name',
+                type: AttributeType.STRING
+            },
+            projectionType: ProjectionType.ALL
         } )
 
         toriiTable.grantReadWriteData( mockFunction.role! )
