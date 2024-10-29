@@ -3,7 +3,7 @@ import { ScheduledEvent, Context } from 'aws-lambda'
 import { Logger } from '@aws-lambda-powertools/logger'
 import { buildNotionMap, buildToriiMap, notionClient, toriiClient } from './utils'
 import { Client as NotionClient } from '@notionhq/client'
-import { addToriiAppToNotion, listNotionApps } from './notion'
+import { addToriiAppToNotion, listNotionApps, updateNotionFromTorii } from './notion'
 import { addNotionAppToTorii, listToriiApps, updateToriiFromNotion } from './torii'
 import type { paths } from "./types/schema"
 import { Client } from 'openapi-fetch'
@@ -54,13 +54,14 @@ export async function handler( _event?: ScheduledEvent, _context?: Context ) {
     // pass a key (second and fourth arguments) that isn't in the relevant object, you're certain to only
     // be able to use a property that exists
     const updateInTorii = getUpdateNeeded( notionMap, 'last_edited_time', toriiMap, 'lastUpdatedAt' )
-    //@ts-ignore
     const updateInNotion = getUpdateNeeded( toriiMap, 'lastUpdatedAt', notionMap, 'last_edited_time' )
 
 
     await addNotionAppToTorii( missingInTorii )
-    await updateToriiFromNotion( updateInTorii )
+    await updateToriiFromNotion( updateInTorii, toriiMap )
+
     await addToriiAppToNotion( missingInNotion )
+    await updateNotionFromTorii( updateInNotion, notionMap )
 
 }
 

@@ -77,6 +77,56 @@ export async function addAppInNotion( app: CreateNotionApp ) {
     }
 }
 
+export async function updateAppInNotion( id: string, appData: Partial<CreateNotionApp> ) {
+    try {
+        const response = await notion.pages.update( {
+            page_id: id,
+            properties: {
+                ...( appData.name && {
+                    Name: {
+                        title: [
+                            {
+                                text: {
+                                    content: appData.name
+                                }
+                            }
+                        ]
+                    }
+                } ),
+                ...( appData.url && {
+                    URL: {
+                        url: appData.url
+                    }
+                } ),
+                ...( appData.state && {
+                    State: {
+                        select: {
+                            name: appData.state
+                        }
+                    }
+                } ),
+                ...( appData.description && {
+                    Description: {
+                        rich_text: [
+                            {
+                                text: {
+                                    content: appData.description
+                                }
+                            }
+                        ]
+                    }
+                } )
+            }
+        } )
+
+        logger.info( "Successfully updated app in Notion database", { response } )
+        return response
+    } catch ( error ) {
+        logger.error( "Failed to update app in Notion database", { error } )
+        throw error
+    }
+}
+
 
 export async function addToriiAppToNotion( missing: ToriiApp[] ) {
     for ( let item of missing ) {
@@ -94,4 +144,39 @@ export async function addToriiAppToNotion( missing: ToriiApp[] ) {
             continue
         }
     }
+}
+
+export async function updateNotionFromTorii( needUpdates: ToriiApp[], existingAppsMap: Map<string, PageObjectResponseWithAppProps> ) {
+
+    for ( let item of needUpdates ) {
+        // We're asserting that this app does exist in the map, because otherwise it wouldn't have been 
+        // passed to this function for updates. If this were ever something production, better error handling
+        // would be needed here
+        const notionApp = existingAppsMap.get( item.name )!
+
+        const notionDescription = notionApp.properties.Description?.rich_text[ 0 ]?.plain_text
+        const notionState = notionApp.properties.State.select.name
+        const notionUrl = notionApp.properties.URL.url
+
+        // If we only go off of last updated time without checking properties for differences,
+        // it will constantly look like the other source has more up to date information since
+        // a PUT/POST of unchanged info will still likely generate a new updated at timestamp
+        if (
+            item.description == notionDescription
+            && item.state == notionState
+            && item.url == notionUrl
+        ) {
+            logger.debug( 'All values are same, continuing' )
+            continue
+        }
+
+        logger.info( `Updating app ${item.name} in Notion` )
+
+        await updateAppInNotion( notionApp.id, {
+            description: item.description ?? '',
+            state: item.state as NotionItemState,
+            url: item.url
+        } )
+    }
+
 }

@@ -157,12 +157,7 @@ export async function addNotionAppToTorii( missing: PageObjectResponseWithAppPro
     }
 }
 
-export async function updateToriiFromNotion( needUpdates: PageObjectResponseWithAppProps[] ) {
-    const existingApps = await listToriiApps()
-    const existingAppsMap = buildMapFromProperty( existingApps, ( app ) => {
-        return app.name
-    } )
-
+export async function updateToriiFromNotion( needUpdates: PageObjectResponseWithAppProps[], existingAppsMap: Map<string, ToriiApp> ) {
     for ( let item of needUpdates ) {
         const itemName = item.properties.Name.title[ 0 ].plain_text
 
