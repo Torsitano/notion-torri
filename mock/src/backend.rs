@@ -20,7 +20,6 @@ pub struct TableSettings {
 pub struct Settings {
     pub environment: String,
     pub table: TableSettings,
-    pub auth_api_key: String,
 }
 
 #[derive(Debug, Clone)]
@@ -29,6 +28,7 @@ where
     AS: AppsServiceTrait,
 {
     pub apps_service: Arc<AS>,
+    pub auth_api_key: String,
 }
 
 #[instrument]
@@ -52,7 +52,6 @@ pub async fn setup() -> Backend<impl AppsServiceTrait> {
             endpoint_url,
             table_name: "torii-table".to_string(),
         },
-        auth_api_key: get_secret_value(&api_key_secret).await,
     };
 
     let dynamo_client = get_dynamo_client(&settings).await;
@@ -64,6 +63,7 @@ pub async fn setup() -> Backend<impl AppsServiceTrait> {
 
     let app_state = Backend {
         apps_service: Arc::new(apps_service),
+        auth_api_key: get_secret_value(&api_key_secret).await,
     };
 
     app_state
