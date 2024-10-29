@@ -194,7 +194,7 @@ fn default_apps() -> HashMap<u16, App> {
             id: 1000,
             name: "Salesforce".to_string(),
             category: AppCategory::SalesAndMarketing,
-            url: "salesforce.com".to_string(),
+            url: "https://salesforce.com".to_string(),
             state: AppState::Sanctioned,
             ..Default::default()
         },
@@ -206,7 +206,7 @@ fn default_apps() -> HashMap<u16, App> {
             id: 1001,
             name: "Zoom".to_string(),
             category: AppCategory::Productivity,
-            url: "zoom.com".to_string(),
+            url: "https://zoom.com".to_string(),
             state: AppState::Sanctioned,
             ..Default::default()
         },
@@ -218,7 +218,7 @@ fn default_apps() -> HashMap<u16, App> {
             id: 1002,
             name: "GitHub".to_string(),
             category: AppCategory::DeveloperTools,
-            url: "github.com".to_string(),
+            url: "https://github.com".to_string(),
             state: AppState::Sanctioned,
             ..Default::default()
         },
@@ -230,7 +230,7 @@ fn default_apps() -> HashMap<u16, App> {
             id: 1003,
             name: "Cats".to_string(),
             category: AppCategory::Other,
-            url: "cats.com".to_string(),
+            url: "https://cats.com".to_string(),
             state: AppState::Sanctioned,
             ..Default::default()
         },
