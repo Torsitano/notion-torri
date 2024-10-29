@@ -31,14 +31,14 @@ export async function getSecret( secretName: string ) {
 
 export async function toriiClient() {
     const torii_url = process.env.TORII_URL ?? 'http://localhost:9000'
-    const toriiSecret = process.env.NOTION_SECRET ?? 'notion-api-key'
+    const toriiSecret = process.env.TORII_SECRET ?? 'notion-api-key'
     const toriiApiKey = await getSecret( toriiSecret )
 
     logger.debug( `Torii URL: ${torii_url}` )
     const torii = createClient<paths>( {
         baseUrl: torii_url,
         headers: {
-            Authorization: `Bearer ${toriiApiKey}`
+            Authorization: `Bearer ${toriiApiKey}`,
         }
     } )
 
