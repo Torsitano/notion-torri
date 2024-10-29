@@ -109,8 +109,3 @@ function getUpdateNeeded<L, LK extends keyof L, R, RK extends keyof R>(
     return needUpdate
 }
 
-
-
-handler().then( () => {
-    console.log( 'finished' )
-} )
