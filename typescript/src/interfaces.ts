@@ -79,3 +79,10 @@ export interface PageObjectResponseWithAppProps extends Omit<PageObjectResponse,
 
 // The inferred type is obnoxious to pass around, so we redefine it here
 export type ToriiApp = components[ "schemas" ][ "App" ]
+
+export interface CreateNotionApp {
+    name: string,
+    url: string,
+    state: NotionItemState,
+    description?: string
+}

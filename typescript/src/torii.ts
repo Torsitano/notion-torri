@@ -165,20 +165,39 @@ export async function updateToriiFromNotion( needUpdates: PageObjectResponseWith
 
     for ( let item of needUpdates ) {
         const itemName = item.properties.Name.title[ 0 ].plain_text
+
+        // We're asserting that this app does exist in the map, because otherwise it wouldn't have been 
+        // passed to this function for updates. If this were ever something production, better error handling
+        // would be needed here
+        const toriiApp = existingAppsMap.get( itemName )!
+
+        const notionDescription = item.properties.Description?.rich_text[ 0 ]?.plain_text
+        const notionState = item.properties.State.select.name
+        const notionUrl = item.properties.URL.url
+
+        // If we only go off of last updated time without checking properties for differences,
+        // it will constantly look like the other source has more up to date information since
+        // a PUT/POST of unchanged info will still likely generate a new updated at timestamp
+        if (
+            toriiApp.description == notionDescription
+            && toriiApp.state == notionState
+            && toriiApp.url == notionUrl
+        ) {
+            logger.debug( 'All values are same, continuing' )
+            continue
+        }
+
         logger.info( `Updating app ${itemName} in Torii` )
 
         // Several of these are possibly undefined, but the updateBody interface expects
         // potentially undefined arguments. Anything undefined will just be a no-op
         const updateBody: components[ "schemas" ][ "UpdateAppHttpRequestBody" ] = {
-            description: item.properties.Description?.rich_text[ 0 ]?.plain_text,
-            state: item.properties.State.select.name,
-            url: item.properties.URL.url
+            description: notionDescription,
+            state: notionState,
+            url: notionUrl
         }
 
-        // We're asserting that this app does exist in the map, because otherwise it wouldn't have been 
-        // passed to this function for updates. If this were ever something production, better error handling
-        // would be needed here
-        const toriiAppId = existingAppsMap.get( itemName )!.id
+        const toriiAppId = toriiApp.id
 
         await updateToriiApp( toriiAppId, updateBody )
     }
