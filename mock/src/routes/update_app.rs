@@ -15,7 +15,7 @@ use crate::{
 
 #[utoipa::path(
     put,
-    path = "/v1.0/apps{id}",
+    path = "/v1.0/apps/{id}",
     params(UpdateAppPathContent),
     request_body = UpdateAppHttpRequestBody,
     responses(

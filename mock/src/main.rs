@@ -29,6 +29,7 @@ mod routes;
         routes::delete_app,
         routes::get_app,
         routes::list_apps,
+        routes::list_known_apps,
         routes::search_apps,
         routes::update_app,
     ),
@@ -40,6 +41,7 @@ mod routes;
             "routes::delete_app",
             "routes::get_app",
             "routes::list_apps",
+            "routes::list_known_apps",
             "routes::search_apps",
             "routes::update_app",
         ])
@@ -50,7 +52,8 @@ mod routes;
         routes::UpdateAppHttpRequestBody,
         repository::models::App,
         repository::models::AppCategory,
-        repository::models::AppState,        
+        repository::models::AppState,       
+        apps_service::KnownApp 
     ))
 )]
 struct ApiDoc;
@@ -94,6 +97,7 @@ async fn main() -> Result<(), Error> {
         )
         .route("/v1.0/apps/custom", post(routes::create_app))
         .route("/v1.0/apps/search", get(routes::search_apps))
+        .route("/v1.0/apps/known", get(routes::list_known_apps))
         .layer(middleware::from_fn_with_state(
             app_state.clone(),
             auth::auth,

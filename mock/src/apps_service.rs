@@ -11,7 +11,18 @@ use crate::{
     },
 };
 use async_trait::async_trait;
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use tracing::error;
+use utoipa::ToSchema;
+
+#[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
+pub struct KnownApp {
+    id: u16,
+    name: String,
+    category: AppCategory,
+    url: String,
+}
 
 #[async_trait]
 pub trait AppsServiceTrait: std::fmt::Debug + Send + Sync + Clone {
@@ -20,6 +31,7 @@ pub trait AppsServiceTrait: std::fmt::Debug + Send + Sync + Clone {
     async fn create_app(&self, request: CreateAppHttpRequestBody) -> Result<App, CreateAppError>;
     async fn delete_app(&self, id: u16) -> Result<(), DeleteAppError>;
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError>;
+    async fn list_known_apps(&self) -> Vec<KnownApp>;
     async fn update_app(
         &self,
         request: UpdateAppHttpRequestBody,
@@ -83,6 +95,7 @@ where
             url: request.url,
             category: request.category,
             tags: request.tags,
+            is_custom: true,
             ..Default::default()
         };
 
@@ -97,6 +110,21 @@ where
     #[tracing::instrument(skip(self))]
     async fn list_apps(&self) -> Result<Vec<App>, ListAppsError> {
         self.repo.list_apps().await
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn list_known_apps(&self) -> Vec<KnownApp> {
+        let known_apps: Vec<KnownApp> = default_apps()
+            .values()
+            .map(|item| KnownApp {
+                id: item.id,
+                category: item.category.clone(),
+                name: item.name.clone(),
+                url: item.url.clone(),
+            })
+            .collect();
+
+        known_apps
     }
 
     #[tracing::instrument(skip(self))]
@@ -131,6 +159,7 @@ where
 
         app.description = request.description;
         app.tags = request.tags;
+        app.last_updated_at = Utc::now();
 
         self.repo.update_app(app).await
     }
@@ -151,6 +180,12 @@ where
 /// Pre-defined apps that can be added
 #[tracing::instrument]
 fn get_default_app(id: u16) -> Option<App> {
+    let default_apps = default_apps();
+
+    default_apps.get(&id).cloned()
+}
+
+fn default_apps() -> HashMap<u16, App> {
     let mut default_apps: HashMap<u16, App> = HashMap::new();
 
     default_apps.insert(
@@ -201,5 +236,5 @@ fn get_default_app(id: u16) -> Option<App> {
         },
     );
 
-    default_apps.get(&id).cloned()
+    default_apps
 }

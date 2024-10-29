@@ -43,7 +43,7 @@ pub struct CreateAppHttpRequestBody {
     #[validate(url)]
     pub url: String,
     pub category: AppCategory,
-    pub description: String,
+    pub description: Option<String>,
     pub tags: Option<String>,
 }
 

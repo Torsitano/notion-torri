@@ -10,6 +10,7 @@ aws-config = "1.5.8"
 aws-sdk-dynamodb = { version = "1.50.0", features = [
     "behavior-version-latest",
 ] }
+aws-sdk-secretsmanager = "1.51.0"
 axum = { version = "0.7.7", features = ["macros"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"

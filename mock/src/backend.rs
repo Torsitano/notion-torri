@@ -20,6 +20,7 @@ pub struct TableSettings {
 pub struct Settings {
     pub environment: String,
     pub table: TableSettings,
+    pub auth_api_key: String,
 }
 
 #[derive(Debug, Clone)]
@@ -43,12 +44,15 @@ pub async fn setup() -> Backend<impl AppsServiceTrait> {
         None
     };
 
+    let api_key_secret = env::var_os("TORII_SECRET").unwrap().into_string().unwrap();
+
     let settings = Settings {
         environment,
         table: TableSettings {
             endpoint_url,
             table_name: "torii-table".to_string(),
         },
+        auth_api_key: get_secret_value(&api_key_secret).await,
     };
 
     let dynamo_client = get_dynamo_client(&settings).await;
@@ -86,4 +90,25 @@ async fn get_dynamo_client(settings: &Settings) -> aws_sdk_dynamodb::Client {
 
         aws_sdk_dynamodb::Client::new(&client_config)
     }
+}
+
+#[instrument]
+pub async fn get_secret_value(secret_name: &str) -> String {
+    let region_provider =
+        aws_config::meta::region::RegionProviderChain::default_provider().or_else("us-east-1");
+
+    let client_config = aws_config::defaults(BehaviorVersion::latest())
+        .region(region_provider)
+        .load()
+        .await;
+    let secrets_client = aws_sdk_secretsmanager::Client::new(&client_config);
+
+    let resp = secrets_client
+        .get_secret_value()
+        .secret_id(secret_name)
+        .send()
+        .await
+        .unwrap();
+
+    resp.secret_string().unwrap().to_string()
 }

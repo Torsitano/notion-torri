@@ -54,6 +54,8 @@ pub struct App {
     pub tags: Option<String>,
     #[serde(rename = "creationTime")]
     pub creation_time: DateTime<Utc>,
+    #[serde(rename = "lastUpdatedAt")]
+    pub last_updated_at: DateTime<Utc>,
     #[serde(rename = "lastUsageTime")]
     pub last_usage_time: Option<DateTime<Utc>>,
     #[serde(rename = "addedBy")]
@@ -70,13 +72,16 @@ impl Default for App {
         // Will blow up if there's a conflict, just here for default because this isn't a real service
         let random_id = rand::thread_rng().gen();
 
+        let now = Utc::now();
+
         Self {
             id: random_id,
             is_hidden: false,
             name: format!("{random_id}-app"),
             added_by: "Default".to_string(),
             category: AppCategory::Other,
-            creation_time: Utc::now(),
+            creation_time: now,
+            last_updated_at: now,
             description: None,
             image_url: None,
             is_custom: false,

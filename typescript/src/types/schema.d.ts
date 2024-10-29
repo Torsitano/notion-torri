@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1.0/apps/known": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_known_apps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1.0/apps/search": {
         parameters: {
             query?: never;
@@ -60,25 +76,9 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_app"];
-        put?: never;
-        post?: never;
-        delete: operations["delete_app"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1.0/apps{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
         put: operations["update_app"];
         post?: never;
-        delete?: never;
+        delete: operations["delete_app"];
         options?: never;
         head?: never;
         patch?: never;
@@ -104,6 +104,8 @@ export interface components {
             isCustom: boolean;
             isHidden: boolean;
             /** Format: date-time */
+            lastUpdatedAt: string;
+            /** Format: date-time */
             lastUsageTime?: string | null;
             name: string;
             primaryOwner: string;
@@ -119,10 +121,17 @@ export interface components {
         AppState: "Discovered" | "Sanctioned" | "Closed";
         CreateAppHttpRequestBody: {
             category: components["schemas"]["AppCategory"];
-            description: string;
+            description?: string | null;
             name: string;
             state: components["schemas"]["AppState"];
             tags?: string | null;
+            url: string;
+        };
+        KnownApp: {
+            category: components["schemas"]["AppCategory"];
+            /** Format: int32 */
+            id: number;
+            name: string;
             url: string;
         };
         UpdateAppHttpRequestBody: {
@@ -321,6 +330,35 @@ export interface operations {
             };
         };
     };
+    list_known_apps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved apps */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnownApp"][];
+                };
+            };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
     search_apps: {
         parameters: {
             query: {
@@ -433,62 +471,6 @@ export interface operations {
             };
         };
     };
-    delete_app: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successfully deleted app */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description UNAUTHORIZED */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Internal server error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     update_app: {
         parameters: {
             query?: never;
@@ -542,6 +524,62 @@ export interface operations {
             };
             /** @description App already exists */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_app: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully deleted app */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
