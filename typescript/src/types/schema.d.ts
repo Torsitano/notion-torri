@@ -117,7 +117,11 @@ export interface components {
         };
         /** @enum {string} */
 <<<<<<< HEAD
+<<<<<<< HEAD
         AppCategory: "Operations" | "Sales & Marketing" | "Developer Tools" | "Design" | "Project Management" | "Customer Success" | "Human Resources" | "IT & Security" | "Finance" | "Productivity" | "Analytics & BI" | "Other";
+=======
+        AppCategory: "Operations" | "SalesAndMarketing" | "DeveloperTools" | "Design" | "ProjectManagement" | "CustomerSuccess" | "HumanResources" | "ItAndSecurity" | "Finance" | "Productivity" | "AnalyticsAndBi" | "Other";
+>>>>>>> main
 =======
         AppCategory: "Operations" | "SalesAndMarketing" | "DeveloperTools" | "Design" | "ProjectManagement" | "CustomerSuccess" | "HumanResources" | "ItAndSecurity" | "Finance" | "Productivity" | "AnalyticsAndBi" | "Other";
 >>>>>>> main
