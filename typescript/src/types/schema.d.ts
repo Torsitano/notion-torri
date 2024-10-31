@@ -116,7 +116,7 @@ export interface components {
             users?: string | null;
         };
         /** @enum {string} */
-        AppCategory: "Operations" | "SalesAndMarketing" | "DeveloperTools" | "Design" | "ProjectManagement" | "CustomerSuccess" | "HumanResources" | "ItAndSecurity" | "Finance" | "Productivity" | "AnalyticsAndBi" | "Other";
+        AppCategory: "Operations" | "Sales & Marketing" | "Developer Tools" | "Design" | "Project Management" | "Customer Success" | "Human Resources" | "IT & Security" | "Finance" | "Productivity" | "Analytics & BI" | "Other";
         /** @enum {string} */
         AppState: "Discovered" | "Sanctioned" | "Closed";
         CreateAppHttpRequestBody: {
