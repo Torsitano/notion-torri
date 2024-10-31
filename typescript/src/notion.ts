@@ -178,5 +178,4 @@ export async function updateNotionFromTorii( needUpdates: ToriiApp[], existingAp
             url: item.url
         } )
     }
-
 }

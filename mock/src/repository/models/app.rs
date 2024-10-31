@@ -13,6 +13,24 @@ pub enum AppState {
 #[derive(Debug, Serialize, Deserialize, strum::Display, Clone, ToSchema)]
 pub enum AppCategory {
     Operations,
+<<<<<<< HEAD
+    #[serde(rename = "Sales & Marketing")]
+    SalesAndMarketing,
+    #[serde(rename = "Developer Tools")]
+    DeveloperTools,
+    Design,
+    #[serde(rename = "Project Management")]
+    ProjectManagement,
+    #[serde(rename = "Customer Success")]
+    CustomerSuccess,
+    #[serde(rename = "Human Resources")]
+    HumanResources,
+    #[serde(rename = "IT & Security")]
+    ItAndSecurity,
+    Finance,
+    Productivity,
+    #[serde(rename = "Analytics & BI")]
+=======
     #[strum(to_string = "Sales & Marketing")]
     SalesAndMarketing,
     #[strum(to_string = "Developer Tools")]
@@ -29,6 +47,7 @@ pub enum AppCategory {
     Finance,
     Productivity,
     #[strum(to_string = "Analytics & BI")]
+>>>>>>> main
     AnalyticsAndBi,
     Other,
 }

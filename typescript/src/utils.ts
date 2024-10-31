@@ -6,6 +6,13 @@ import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-sec
 import { listNotionApps } from './notion'
 import { listToriiApps } from './torii'
 
+/**
+ * Retrieves a secret value from AWS Secrets Manager.
+ *
+ * @param {string} secretName - The name of the secret to retrieve.
+ * @returns {Promise<string>} - The secret value as a string.
+ * @throws {Error} - If the secret value is missing or retrieval fails.
+ */
 export async function getSecret( secretName: string ) {
     const secretClient = new SecretsManagerClient( {
         region: process.env.REGION ?? 'us-east-1'
@@ -28,15 +35,20 @@ export async function getSecret( secretName: string ) {
     }
 }
 
-
+/**
+ * Creates and returns an instance of the Torii API client, authenticated using a secret from AWS Secrets Manager.
+ *
+ * @returns {Promise<ReturnType<typeof createClient<paths>>>} - An authenticated Torii client instance.
+ * @throws {Error} - If retrieving the secret or creating the client fails.
+ */
 export async function toriiClient() {
-    const torii_url = process.env.TORII_URL ?? 'http://localhost:9000'
-    const toriiSecret = process.env.TORII_SECRET ?? 'notion-api-key'
+    const toriiUrl = process.env.TORII_URL ?? 'http://localhost:9000'
+    const toriiSecret = process.env.TORII_SECRET ?? 'torii-api-key'
     const toriiApiKey = await getSecret( toriiSecret )
 
-    logger.debug( `Torii URL: ${torii_url}` )
+    logger.debug( `Torii URL: ${toriiUrl}` )
     const torii = createClient<paths>( {
-        baseUrl: torii_url,
+        baseUrl: toriiUrl,
         headers: {
             Authorization: `Bearer ${toriiApiKey}`,
         }
@@ -45,6 +57,12 @@ export async function toriiClient() {
     return torii
 }
 
+/**
+ * Creates and returns an instance of the Notion API client, authenticated using a secret from AWS Secrets Manager.
+ *
+ * @returns {Promise<NotionClient>} - An authenticated Notion client instance.
+ * @throws {Error} - If retrieving the secret or creating the client fails.
+ */
 export async function notionClient() {
 
     const notionSecret = process.env.NOTION_SECRET ?? 'notion-api-key'
@@ -63,6 +81,16 @@ export async function notionClient() {
 // done in the Notion response. Alternatively we could flatten that object, but it would
 // create additional complexity when we look at syncing back to Notion, so it's easier
 // to work with the objects in their normal form
+
+/**
+ * Builds a map from an iterable collection of objects, where each object is mapped by a property value.
+ *
+ * @template T - The type of the iterable items.
+ * @param {Iterable<T>} iterable - An iterable collection of objects.
+ * @param {(item: T) => string} getKey - A function that extracts the key from each item.
+ * @returns {Map<string, T>} - A map with keys derived from item properties.
+ * @throws {Error} - If the key extracted from any item is not a string.
+ */
 export function buildMapFromProperty<T>(
     iterable: Iterable<T>,
     getKey: ( item: T ) => string
@@ -71,12 +99,7 @@ export function buildMapFromProperty<T>(
 
     for ( let item of iterable ) {
         const key = getKey( item )
-        if ( typeof key === "string" ) {
-            map.set( key, item )
-        } else {
-            logger.error( 'Unexpected Key on item', { item } )
-            throw new Error( "The extracted key must be a string" )
-        }
+        map.set( key, item )
     }
 
     return map
@@ -89,6 +112,14 @@ export function buildMapFromProperty<T>(
 // returned by Notion into something more reasonable, this would automagically throw an
 // error from the change if the specified property wasn't there. This prevents refactoring
 // mistakes and makes code changes significantly more safe
+
+/**
+ * Builds a map of Notion apps, using the name of each app as the key.
+ *
+ * @param {Awaited<ReturnType<typeof listNotionApps>>} notionApps - The list of Notion apps.
+ * @returns {Map<string, typeof notionApps[0]>} - A map with app names as keys.
+ * @throws {Error} - If any app does not have a name or if any key is not a string.
+ */
 export function buildNotionMap( notionApps: Awaited<ReturnType<typeof listNotionApps>> ) {
     return buildMapFromProperty( notionApps, ( item ) => {
         logger.debug( 'Item in BuildMapFromProperty', { builditem: item } )
@@ -102,6 +133,13 @@ export function buildNotionMap( notionApps: Awaited<ReturnType<typeof listNotion
     } )
 }
 
+/**
+ * Builds a map of Torii apps, using the name of each app as the key.
+ *
+ * @param {Awaited<ReturnType<typeof listToriiApps>>} toriiApps - The list of Torii apps.
+ * @returns {Map<string, typeof toriiApps[0]>} - A map with app names as keys.
+ * @throws {Error} - If any key is not a string.
+ */
 export function buildToriiMap( toriiApps: Awaited<ReturnType<typeof listToriiApps>> ) {
     return buildMapFromProperty( toriiApps, ( item ) => {
         return item.name

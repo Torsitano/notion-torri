@@ -18,10 +18,11 @@ export let torii: Client<paths, `${string}/${string}`>
 export let notion: NotionClient
 
 
-
-export async function handler( _event?: ScheduledEvent, _context?: Context ) {
+export async function handler( event?: ScheduledEvent, context?: Context ) {
+    logger.injectLambdaContext()
 
     logger.info( 'STARTED!' )
+    logger.debug( 'Lambda Payload:', { event }, { context } )
 
     // If this Lambda was something getting a lot of activity, we'd want to avoid this so we
     // didn't have a call to Secrets Manager every instantiation, which eliminates benefits of
